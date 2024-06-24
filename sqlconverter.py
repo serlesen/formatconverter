@@ -13,13 +13,13 @@ class SQLConverter:
         with open(self.input_filename, 'r') as file:
             reader = csv.reader(file, delimiter='|')
             for row in reader:
-                data.append([value.strip() for value in row])
+                data.append([value.strip().replace("'", "''") for value in row])
         return data
     
     def generate_sql_insert(self, columns, values):
         sql = f"INSERT INTO {self.table_name} ({', '.join(columns)})\nVALUES\n"
         for value_set in values:
-            formatted_values = ', '.join([f"'{value}'" for value in value_set])
+            formatted_values = ', '.join([f"'{value}'" if len(value) > 0  else "null" for value in value_set])
             sql += f"({formatted_values}),\n"
         # Remove the trailing comma and add a semicolon
         sql = sql[:-2] + ';\n'
@@ -29,7 +29,7 @@ class SQLConverter:
         data = self.read_csv_with_pipes()
     
         header = data[0]
-        values = data[2:-1]  # Exclude header, dashed line, and count
+        values = data[1:-1]  # Exclude header, dashed line, and count
     
         sql_script = self.generate_sql_insert(header, values)
     
